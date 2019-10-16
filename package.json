@@ -37,9 +37,6 @@
     "env": {
       "node": true
     },
-    "vue": {
-      "publicPath": "/Tarea3_WebAvanzada/"
-    },
     "extends": [
       "plugin:vue/essential",
       "eslint:recommended"
