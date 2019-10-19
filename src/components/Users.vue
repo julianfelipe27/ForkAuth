@@ -18,9 +18,31 @@
         <v-text-field  label='Nombre(s)' :value="currentUser.nombre"></v-text-field>
         <v-text-field  label='Apellido(s)' :value="currentUser.apellido"></v-text-field>
         <v-text-field  label='Email' :value="currentUser.email"></v-text-field>
-        <v-select  placeholder="Dependencias" :multiple="true"  :items="currentUser.deps" ></v-select>
-        <v-switch  :label="`Estado: Activo`" :value="currentUser.estado"></v-switch>
-        <v-text-field  label='Valido hasta' placeholder="dd/mm/aaaa" :value="currentUser.valido"></v-text-field>
+        <v-select  placeholder="Dependencias" :multiple="true"  :items="['Logística','Desarrollo']" ></v-select>
+        <v-menu
+        ref="menu"
+        v-model="menu"
+        :close-on-content-click="false"
+        :return-value.sync="date"
+        transition="scale-transition"
+        offset-y
+        min-width="290px"
+      >
+        <template v-slot:activator="{ on }">
+          <v-text-field
+            v-model="date"
+            label="Valido hasta"
+            prepend-icon="event"
+            readonly
+            v-on="on"
+          ></v-text-field>
+        </template>
+        <v-date-picker v-model="date" no-title scrollable>
+          <v-spacer></v-spacer>
+          <v-btn text color="primary" @click="menu = false">Cancel</v-btn>
+          <v-btn text color="primary" @click="$refs.menu.save(date)">OK</v-btn>
+        </v-date-picker>
+      </v-menu>
 
         </div>
 
@@ -60,12 +82,11 @@
           Agregar usuario
         </v-card-title>
         <v-form  ref="form" v-model="valid" style="margin:auto;width:70%; display:flex;flex-direction:column;align-items:center">
-        <v-text-field :rules="rules" :v-model="name" label='Nombre(s)'></v-text-field>
-        <v-text-field :rules="rules" :v-model="lastname" label='Apellido(s)'></v-text-field>
-        <v-text-field :rules="emailRules" :v-model="email" label='Email'></v-text-field>
-        <v-select :rules="selectRules" :v-model="deps" placeholder="Dependencias" :multiple="true" :items="['Logística','Desarrollo']"></v-select>
-        <v-switch v-model="state" :label="`Estado: ${state?'Activo':'Inactivo'}`"
-        ></v-switch>
+        <v-text-field :rules="rules" v-model="name" label='Nombre(s)'></v-text-field>
+        <v-text-field :rules="rules" v-model="lastname" label='Apellido(s)'></v-text-field>
+        <v-text-field :rules="emailRules" v-model="email" label='Email'></v-text-field>
+        <v-select :rules="selectRules" v-model="deps" placeholder="Dependencias" :multiple="true" :items="['Logística','Desarrollo']"></v-select>
+
          <v-menu
         ref="menu"
         v-model="menu"
@@ -100,7 +121,7 @@
             :disabled="!valid"
             color="primary"
             text
-            @click="dialogAdd=false"
+            @click="addUser()"
           >
             Agregar
           </v-btn>
@@ -130,7 +151,7 @@
         style="width:100%;"
         :headers="headers"
         :items="users"
-        :items-per-page="5"
+        :items-per-page="15"
         class="elevation-1"
       >
         <template v-slot:item.acciones="{ item }">
@@ -159,7 +180,6 @@ export default {
       ],
       emailRules: [
         value => !!value || 'Obligatorio.',
-        value => (value || '').length <= 20 || 'Max 20 carácteres',
         value => {
           const pattern = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
           return pattern.test(value) || 'Email inválido'
@@ -248,33 +268,37 @@ export default {
            deps:[
           ]
         }
+    let date =new Date().toISOString().substring(0,10)
     fb.usersCollection.get().then(querySnapshot=>{querySnapshot.forEach(doc=>{
-      let data=(doc.data().userInfoRegister)
-      user={
-        id:this.users.length,
-        nombre:data.name,
-        apellido:data.lastName,
-        estado:data.activie?"Activo":"Inactivo",
-        email: data.email1,
-        valido:'',
-        deps:[ ]
+      let data=(doc.data())
+      if(doc.data().id){
+        user={
+          id:data.id,
+          nombre:data.nombre,
+          apellido:data.apellido,
+          estado:date>data.valido?'Inactivo':'Activo',
+          email: data.email,
+          deps:data.deps
+        }
+        this.users.push(user)
+        console.log(user.deps)
       }
-      this.users.push(user)
     })})
   },
   methods:{
-   
+
     addUser(){
       let user={
-        id:this.user.length,
-        nombre: this.name?this.name:(this.nameLbl=true),
-        apellido:this.lastName,
-        estado:this.state,
+        id:this.users.length.toString(),
+        nombre: this.name,
+        apellido:this.lastname,
         email:this.email,
-        valido:this.valid,
+        valido:this.date,
         deps:this.deps
       }
-      this.users.push(user)
+      fb.usersCollection.doc(user.id).set(user)
+      this.dialogAdd=false
+
     },
     removeUser(item){ 
       fb.usersCollection.doc(item.id).delete()
