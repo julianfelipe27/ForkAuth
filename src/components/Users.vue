@@ -15,12 +15,12 @@
           Editar usuario
         </v-card-title>
         <div style="margin:auto;width:70%; display:flex;flex-direction:column;align-items:center">
-        <v-text-field  label='Nombre(s)' :value="currentUser.nombre"></v-text-field>
-        <v-text-field  label='Apellido(s)' :value="currentUser.apellido"></v-text-field>
-        <v-text-field  label='Email' :value="currentUser.email"></v-text-field>
-        <v-select  placeholder="Dependencias" :multiple="true"  :items="['Logística','Desarrollo']" ></v-select>
+        <v-text-field :v-model="userToEdit.name" label='Nombre(s)' :value="currentUser.nombre"></v-text-field>
+        <v-text-field :v-model="userToEdit.lastname" label='Apellido(s)' :value="currentUser.apellido"></v-text-field>
+        <v-text-field :v-model="userToEdit.email" label='Email' :value="currentUser.email"></v-text-field>
+        <v-select v-model="userToEdit.deps" placeholder="Dependencias" :multiple="true"  :items="['Logística','Desarrollo']" ></v-select>
         <v-menu
-        ref="menu"
+        ref="menu2"
         v-model="menu"
         :close-on-content-click="false"
         :return-value.sync="date"
@@ -30,14 +30,14 @@
       >
         <template v-slot:activator="{ on }">
           <v-text-field
-            v-model="date"
+            :v-model="userToEdit.date"
             label="Valido hasta"
             prepend-icon="event"
             readonly
             v-on="on"
           ></v-text-field>
         </template>
-        <v-date-picker v-model="date" no-title scrollable>
+        <v-date-picker v-model="userToEdit.date" no-title scrollable>
           <v-spacer></v-spacer>
           <v-btn text color="primary" @click="menu = false">Cancel</v-btn>
           <v-btn text color="primary" @click="$refs.menu.save(date)">OK</v-btn>
@@ -199,10 +199,20 @@ export default {
       lastname:"",
       email:"",
       deps:[],
-      state:true,
       valid:"",
       date: new Date().toISOString().substr(0, 10),
       menu: false,
+
+      userToEdit:
+        {
+          name:"",
+          lastname:"",
+          email:"",
+          deps:[],
+          valid:"",
+          date:new Date().toISOString().substr(0, 10),
+          menu2:false
+        },
 
       search: "",
       currentUser:"",
