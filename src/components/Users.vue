@@ -66,8 +66,30 @@
         <v-select :rules="selectRules" :v-model="deps" placeholder="Dependencias" :multiple="true" :items="['Logística','Desarrollo']"></v-select>
         <v-switch v-model="state" :label="`Estado: ${state?'Activo':'Inactivo'}`"
         ></v-switch>
-        <v-date-picker :rules="dateRules" :v-model="valid"  label='Valido hasta' placeholder="dd/mm/aaaa" ></v-date-picker>
-
+         <v-menu
+        ref="menu"
+        v-model="menu"
+        :close-on-content-click="false"
+        :return-value.sync="date"
+        transition="scale-transition"
+        offset-y
+        min-width="290px"
+      >
+        <template v-slot:activator="{ on }">
+          <v-text-field
+            v-model="date"
+            label="Valido hasta"
+            prepend-icon="event"
+            readonly
+            v-on="on"
+          ></v-text-field>
+        </template>
+        <v-date-picker v-model="date" no-title scrollable>
+          <v-spacer></v-spacer>
+          <v-btn text color="primary" @click="menu = false">Cancel</v-btn>
+          <v-btn text color="primary" @click="$refs.menu.save(date)">OK</v-btn>
+        </v-date-picker>
+      </v-menu>
 
 
         <v-divider></v-divider>
@@ -159,6 +181,9 @@ export default {
       deps:[],
       state:true,
       valid:"",
+      date: new Date().toISOString().substr(0, 10),
+      menu: false,
+
       search: "",
       currentUser:"",
 
